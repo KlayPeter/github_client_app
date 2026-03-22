@@ -1,20 +1,41 @@
 class Repo {
-  final String name; // 项目名称
-  final String description; // 项目描述
-  final int stars; // 项目星标数
+  final String name;
+  final String description;
+  final int stars;
+
+  // 👇 新增
+  final String owner;
+  final String url;
+  final int forks;
+  final int issues;
+  final String createdAt;
+  final String updatedAt;
 
   Repo({
     required this.name,
     required this.description,
     required this.stars,
-  }); // 构造函数
+    required this.owner,
+    required this.url,
+    required this.forks,
+    required this.issues,
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
-  // 从 JSON 数据创建 Repo 实例的工厂构造函数
   factory Repo.fromJson(Map<String, dynamic> json) {
     return Repo(
-      name: json['name'],
+      name: json['name'] ?? '',
       description: json['description'] ?? '',
       stars: json['stargazers_count'] ?? 0,
+
+      // 👇 解析新增字段
+      owner: json['owner']?['login'] ?? '',
+      url: json['html_url'] ?? '',
+      forks: json['forks_count'] ?? 0,
+      issues: json['open_issues_count'] ?? 0,
+      createdAt: json['created_at'] ?? '',
+      updatedAt: json['updated_at'] ?? '',
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/github_api.dart';
 import '../models/repo.dart';
 import '../common/global.dart';
+import 'detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key}); // 构造函数
@@ -123,52 +124,64 @@ class _HomePageState extends State<HomePage> {
                     itemBuilder: (context, index) {
                       final repo = repos[index];
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        elevation: 3, // 阴影
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // 仓库名
-                              Text(
-                                repo.name,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-
-                              const SizedBox(height: 6),
-
-                              // 描述
-                              Text(
-                                repo.description.isEmpty
-                                    ? '暂无描述'
-                                    : repo.description,
-                                style: const TextStyle(color: Colors.grey),
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              // 星星数
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  const Icon(
-                                    Icons.star,
-                                    size: 16,
-                                    color: Colors.orange,
+                      return GestureDetector(
+                        onTap: () {
+                          // 页面跳转
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DetailPage(repo: repo), // 传递数据
+                            ),
+                          );
+                        },
+                        child: Card(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          elevation: 3, // 阴影
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 仓库名
+                                Text(
+                                  repo.name,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text('${repo.stars}'),
-                                ],
-                              ),
-                            ],
+                                ),
+
+                                const SizedBox(height: 6),
+
+                                // 描述
+                                Text(
+                                  repo.description.isEmpty
+                                      ? '暂无描述'
+                                      : repo.description,
+                                  style: const TextStyle(color: Colors.grey),
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                // 星星数
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    const Icon(
+                                      Icons.star,
+                                      size: 16,
+                                      color: Colors.orange,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text('${repo.stars}'),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
