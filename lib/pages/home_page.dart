@@ -65,6 +65,9 @@ class _HomePageState extends State<HomePage> {
     // 更新全局关键词
     Global.keyword = keyword;
 
+    // ✅ 保存到本地
+    Global.saveKeyword(keyword);
+
     // 重新加载数据
     loadData();
   }
