@@ -92,36 +92,89 @@ class _HomePageState extends State<HomePage> {
                       hintText: '输入关键词，比如 flutter',
                       border: OutlineInputBorder(),
                     ),
-                  )
+                  ),
                 ),
 
                 const SizedBox(width: 10), // 间距
-
                 // 搜索按钮
                 ElevatedButton(
                   onPressed: handleSearch, // 点击事件
                   child: const Text('搜索'),
-                )
+                ),
               ],
             ),
           ),
 
           // 列表区域
           Expanded(
-            child: loading ? const Center(child: CircularProgressIndicator()) // 加载中显示指示器
-              : ListView.builder( // 否则显示列表
-                itemCount: repos.length,
+            child: loading
+                ? const Center(child: CircularProgressIndicator()) // 加载中显示指示器
+                // 空数据判断
+                : repos.isEmpty
+                ? const Center(
+                    child: Text(
+                      '暂无数据，试试换个关键词 👀',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                : ListView.builder(
+                    // 否则显示列表
+                    itemCount: repos.length,
                     itemBuilder: (context, index) {
                       final repo = repos[index];
 
-                      return ListTile(
-                        title: Text(repo.name),
-                        subtitle: Text(repo.description),
-                        trailing: Text('⭐ ${repo.stars}'),
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        elevation: 3, // 阴影
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 仓库名
+                              Text(
+                                repo.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              // 描述
+                              Text(
+                                repo.description.isEmpty
+                                    ? '暂无描述'
+                                    : repo.description,
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              // 星星数
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    size: 16,
+                                    color: Colors.orange,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text('${repo.stars}'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                     },
-              )
-            )
+                  ),
+          ),
         ],
       ),
     );
