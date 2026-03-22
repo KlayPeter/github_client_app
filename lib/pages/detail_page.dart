@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import '../models/repo.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DetailPage extends StatelessWidget {
   final Repo repo;
 
   const DetailPage({super.key, required this.repo});
+
+  /// 打开浏览器
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+
+    // 判断能不能打开
+    if (!await launchUrl(uri)) {
+      throw Exception('无法打开链接: $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,9 +74,15 @@ class DetailPage extends StatelessWidget {
             Text('仓库地址：', style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
 
-            SelectableText(
-              repo.url,
-              style: const TextStyle(color: Colors.blue),
+            GestureDetector(
+              onTap: () => _launchUrl(repo.url), // 点击打开
+              child: Text(
+                repo.url,
+                style: const TextStyle(
+                  color: Colors.blue,
+                  decoration: TextDecoration.underline, // 下划线
+                ),
+              ),
             ),
           ],
         ),
