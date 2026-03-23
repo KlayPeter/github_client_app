@@ -14,6 +14,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<Repo> repos = []; // 仓库列表数据
   bool loading = false;
+  int page = 1; // 当前页
+  bool isLoadingMore = false; // 是否正在加载更多
+  final ScrollController _scrollController = ScrollController(); // 滚动控制
 
   // 输入框控制器（用来获取输入内容）
   final TextEditingController _controller = TextEditingController();
@@ -28,19 +31,41 @@ class _HomePageState extends State<HomePage> {
 
     // 页面加载时请求一次数据
     loadData();
+
+    // 监听滚动
+    _scrollController.addListener(() {
+      // 滚动到底部
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 50) {
+        // 防止重复触发
+        if (!isLoadingMore) {
+          page++; // 下一页
+          loadData(isLoadMore: true);
+        }
+      }
+    });
   }
 
-  Future loadData() async {
-    setState(() {
-      loading = true; // 开始加载
-    });
+  Future loadData({bool isLoadMore = false}) async {
+    if (isLoadMore) {
+      isLoadingMore = true;
+    } else {
+      setState(() {
+        loading = true;
+        page = 1; // 刷新时重置页码
+      });
+    }
 
     try {
       // 调用 API 获取数据
-      final result = await GithubApi.fetchRepos(Global.keyword);
+      final result = await GithubApi.fetchRepos(Global.keyword, page);
 
       setState(() {
-        repos = result; // 更新列表数据
+        if (isLoadingMore) {
+          repos.addAll(result); // 追加数据
+        } else {
+          repos = result; //替换数据
+        }
       });
     } catch (e) {
       // 出错提示（简单打印）
@@ -48,6 +73,7 @@ class _HomePageState extends State<HomePage> {
     } finally {
       setState(() {
         loading = false; // 结束加载
+        isLoadMore = false;
       });
     }
   }
@@ -118,74 +144,92 @@ class _HomePageState extends State<HomePage> {
                       style: TextStyle(color: Colors.grey),
                     ),
                   )
-                : ListView.builder(
-                    // 否则显示列表
-                    itemCount: repos.length,
-                    itemBuilder: (context, index) {
-                      final repo = repos[index];
-
-                      return GestureDetector(
-                        onTap: () {
-                          // 页面跳转
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  DetailPage(repo: repo), // 传递数据
-                            ),
-                          );
-                        },
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          elevation: 3, // 阴影
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 仓库名
-                                Text(
-                                  repo.name,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 6),
-
-                                // 描述
-                                Text(
-                                  repo.description.isEmpty
-                                      ? '暂无描述'
-                                      : repo.description,
-                                  style: const TextStyle(color: Colors.grey),
-                                ),
-
-                                const SizedBox(height: 10),
-
-                                // 星星数
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    const Icon(
-                                      Icons.star,
-                                      size: 16,
-                                      color: Colors.orange,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text('${repo.stars}'),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
+                : RefreshIndicator(
+                    onRefresh: () async {
+                      await loadData(); // 下拉刷新时重新加载数据
                     },
+                    child: ListView.builder(
+                      controller: _scrollController, // 绑定滚动控制器
+                      // 否则显示列表
+                      itemCount: repos.length + 1, // 多一个用于显示加载更多
+                      itemBuilder: (context, index) {
+                        // 最后一个显示加载更多
+                        if (index == repos.length) {
+                          return isLoadingMore
+                              ? const Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                              : const SizedBox(); // 没有更多了显示空组件
+                        }
+
+                        final repo = repos[index];
+
+                        return GestureDetector(
+                          onTap: () {
+                            // 页面跳转
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    DetailPage(repo: repo), // 传递数据
+                              ),
+                            );
+                          },
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            elevation: 3, // 阴影
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // 仓库名
+                                  Text(
+                                    repo.name,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 6),
+
+                                  // 描述
+                                  Text(
+                                    repo.description.isEmpty
+                                        ? '暂无描述'
+                                        : repo.description,
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+
+                                  const SizedBox(height: 10),
+
+                                  // 星星数
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      const Icon(
+                                        Icons.star,
+                                        size: 16,
+                                        color: Colors.orange,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text('${repo.stars}'),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
           ),
         ],
